@@ -163,10 +163,15 @@ def textProcess(textArray,savingPath):
     r.close()
 
 # In[26]:
+def cv_read(filePath):
+    cv_img = cv2.imdecode(np.fromfile(filePath, dtype=np.uint8),-1)
+    cv_img = cv2.cvtColor(cv_img, cv2.COLOR_RGB2BGR)
+    return cv_img
 
 def detect(filePath):
     # 0. 读取图像
     img = cv2.imread(filePath)
+    # img = cv_read(filePath)
     # 1. 转化成灰度图
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -177,7 +182,7 @@ def detect(filePath):
     region = findTextRegion(dilation)
     # 4. 获取路径    
     rootPath = os.getcwd()
-    fileNameOnly = filePath.replace('.','_')
+    fileNameOnly = os.path.basename(filePath).replace('.','_')
    
     fullPath = rootPath + '\\cropped\\' + fileNameOnly
     if not os.path.exists(fullPath): 
@@ -211,28 +216,33 @@ def detect(filePath):
 
 if __name__=="__main__":
     # 多进程测试 - 4张图 90s
-    processes = []
-    t = time.time()
-    for file in ['img_raw.jpg','img_raw1.jpg','smtz.jpg','smtz1.jpg']:
-        p = Process(target=detect,args=(file,))
-        p.start()  
-        processes.append(p)
-    #加入线程池管理         
-    for process in processes:
-        process.join()
-    print (time.time() - t," sec used")
-
-    # # 多线程测试 - 4张图 80s
-    # threads = []
+    # processes = []
     # t = time.time()
-    # for file in ['img_raw.jpg','img_raw1.jpg','smtz.jpg','smtz1.jpg']:
-    #     t = threading.Thread(target=detect,args=(file,))
-    #     t.start()  
-    #     threads.append(t)
+    # imgDir = map(lambda x: os.path.abspath(x), os.listdir("images"))
+    # for file in imgDir:
+    #     p = Process(target=detect,args=(file,))
+    #     p.start()  
+    #     processes.append(p)
     # #加入线程池管理         
-    # for thread in threads:
-    #     thread.join()
+    # for process in processes:
+    #     process.join()
     # print (time.time() - t," sec used")
+
+
+
+    # 多线程测试 - 4张图 80s
+    threads = []
+    startTime = time.time()
+    imgDir = map(lambda x: os.path.abspath(x).decode('gbk'), os.listdir("images"))
+    for file in imgDir:
+        t = threading.Thread(target=detect,args=(file,))
+        t.start()  
+        threads.append(t)
+    #加入线程池管理         
+    for thread in threads:
+        thread.join()
+    endTime = time.time()
+    print (endTime - startTime," sec used")
 
 # In[ ]:
 
